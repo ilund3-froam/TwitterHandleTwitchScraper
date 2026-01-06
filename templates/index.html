@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Twitter Handle Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-name {
+            margin-top: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .results-preview {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-preview.show {
+            display: block;
+        }
+
+        .results-preview h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .preview-table th,
+        .preview-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .preview-table th {
+            font-weight: 600;
+        }
+
+        .preview-table tbody tr:hover {
+            background: #f8f9ff;
+        }
+
+        .preview-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .preview-table .not-found {
+            color: #999;
+            font-style: italic;
+        }
+
+        .max-height {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐺 Twitch Twitter Scraper</h1>
+        <p class="subtitle">Upload a CSV of Twitch usernames to extract their Twitter handles</p>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click to upload or drag and drop</div>
+            <div class="upload-hint">CSV file with Twitch usernames</div>
+            <input type="file" id="fileInput" accept=".csv" />
+            <div class="file-name" id="fileName"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" id="processBtn" onclick="processFile()">Process CSV</button>
+            <button class="btn-secondary" id="downloadBtn" onclick="downloadFile()" disabled>Download Results</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Processing... This may take a while.</div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="results-preview" id="resultsPreview">
+            <h2>Preview Results</h2>
+            <div class="max-height">
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>Twitch Username</th>
+                            <th>Twitter Handle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const processBtn = document.getElementById('processBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('status');
+        const resultsPreview = document.getElementById('resultsPreview');
+        const resultsTableBody = document.getElementById('resultsTableBody');
+
+        let selectedFile = null;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (file.name.endsWith('.csv')) {
+                selectedFile = file;
+                fileName.textContent = `Selected: ${file.name}`;
+                downloadBtn.disabled = true;
+                hideStatus();
+                hideResults();
+            } else {
+                showStatus('Please select a CSV file', 'error');
+            }
+        }
+
+        async function processFile() {
+            if (!selectedFile) {
+                showStatus('Please select a CSV file first', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            processBtn.disabled = true;
+            loading.classList.add('show');
+            hideStatus();
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showStatus(data.message, 'success');
+                    downloadBtn.disabled = false;
+                    displayResults(data.results);
+                } else {
+                    showStatus(data.error || 'An error occurred', 'error');
+                    hideResults();
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            } finally {
+                processBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+
+        function downloadFile() {
+            window.location.href = '/download';
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status show ' + type;
+        }
+
+        function hideStatus() {
+            status.classList.remove('show');
+        }
+
+        function displayResults(results) {
+            resultsTableBody.innerHTML = '';
+            results.forEach(result => {
+                const row = document.createElement('tr');
+                const usernameCell = document.createElement('td');
+                usernameCell.textContent = result.twitch_username;
+                
+                const handleCell = document.createElement('td');
+                if (result.twitter_handle === 'Not found') {
+                    handleCell.textContent = result.twitter_handle;
+                    handleCell.className = 'not-found';
+                } else {
+                    handleCell.textContent = result.twitter_handle ? '@' + result.twitter_handle : 'Not found';
+                }
+                
+                row.appendChild(usernameCell);
+                row.appendChild(handleCell);
+                resultsTableBody.appendChild(row);
+            });
+            resultsPreview.classList.add('show');
+        }
+
+        function hideResults() {
+            resultsPreview.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
+
